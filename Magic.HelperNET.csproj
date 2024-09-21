@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyVersion>41.0.0.0</AssemblyVersion>
+    <FileVersion>41.0.0.0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+	 <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
+  </ItemGroup>
+</Project>

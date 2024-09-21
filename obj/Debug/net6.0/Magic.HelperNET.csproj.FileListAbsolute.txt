@@ -1,0 +1,11 @@
+C:\Users\Dell Latitude 7400\Documents\repos\Magic.HelperNET\bin\Debug\net6.0\Magic.HelperNET.deps.json
+C:\Users\Dell Latitude 7400\Documents\repos\Magic.HelperNET\bin\Debug\net6.0\Magic.HelperNET.dll
+C:\Users\Dell Latitude 7400\Documents\repos\Magic.HelperNET\bin\Debug\net6.0\Magic.HelperNET.pdb
+C:\Users\Dell Latitude 7400\Documents\repos\Magic.HelperNET\obj\Debug\net6.0\Magic.HelperNET.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Dell Latitude 7400\Documents\repos\Magic.HelperNET\obj\Debug\net6.0\Magic.HelperNET.AssemblyInfoInputs.cache
+C:\Users\Dell Latitude 7400\Documents\repos\Magic.HelperNET\obj\Debug\net6.0\Magic.HelperNET.AssemblyInfo.cs
+C:\Users\Dell Latitude 7400\Documents\repos\Magic.HelperNET\obj\Debug\net6.0\Magic.HelperNET.csproj.CoreCompileInputs.cache
+C:\Users\Dell Latitude 7400\Documents\repos\Magic.HelperNET\obj\Debug\net6.0\Magic.HelperNET.dll
+C:\Users\Dell Latitude 7400\Documents\repos\Magic.HelperNET\obj\Debug\net6.0\refint\Magic.HelperNET.dll
+C:\Users\Dell Latitude 7400\Documents\repos\Magic.HelperNET\obj\Debug\net6.0\Magic.HelperNET.pdb
+C:\Users\Dell Latitude 7400\Documents\repos\Magic.HelperNET\obj\Debug\net6.0\ref\Magic.HelperNET.dll
