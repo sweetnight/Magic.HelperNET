@@ -427,7 +427,7 @@ namespace Magic
         {
             startTime = DateTime.Now;
             processStarted = true;
-        }
+        } // end of method
 
         public static void EndMinimumTime(int minimumDurationMilliseconds)
         {
