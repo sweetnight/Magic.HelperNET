@@ -14,7 +14,7 @@ namespace Magic
 
         public static Form FindMainForm(Control control)
         {
-            Form mainForm = control.FindForm();
+            Form? mainForm = control.FindForm();
 
             while (mainForm != null && mainForm.GetType() != typeof(Form))
             {
@@ -99,7 +99,7 @@ namespace Magic
             return CellCollection.Cast<DataGridViewCell>().First(c => c.OwningColumn.DataPropertyName == dataPropertyName).Value;
         } // end of method
 
-        public static string Spintax(string input)
+        public static string Spintax_old(string input)
         {
             Random rnd = new Random();
             // Loop over string until all patterns exhausted.
@@ -117,6 +117,53 @@ namespace Magic
 
             // Return the modified string.
             return input;
+        } // end of method
+
+        private static readonly Random rnd = new Random();
+
+        public static string Spintax(string input)
+        {
+
+            // Ganti tab dengan spasi
+            input = input.Replace("\t", " ");
+
+            // Hapus spasi setelah `{`
+            input = Regex.Replace(input, @"{\s+", "{");
+
+            // Hapus spasi sebelum `}`
+            input = Regex.Replace(input, @"\s+}", "}");
+
+            // Hapus spasi di sekitar `|`
+            input = Regex.Replace(input, @"\s*\|\s*", "|");
+
+            string pattern = "{[^{}]*}";
+            Match m = Regex.Match(input, pattern);
+
+            Random rnd = new Random(); // Pindahkan di sini jika tidak punya variable rnd global
+
+            while (m.Success)
+            {
+                string seg = input.Substring(m.Index + 1, m.Length - 2);
+
+                // Split dan buang slot kosong
+                string[] choices = seg
+                    .Split('|')
+                    .Select(s => s.Trim())
+                    .Where(s => !string.IsNullOrEmpty(s))
+                    .ToArray();
+
+                // Jika semua slot kosong, replacement = ""
+                string replacement = choices.Length > 0
+                    ? choices[rnd.Next(choices.Length)]
+                    : "";
+
+                input = input.Substring(0, m.Index) + replacement + input.Substring(m.Index + m.Length);
+                m = Regex.Match(input, pattern);
+            }
+
+            // Hilangkan spasi berlebih, trim di awal/akhir
+            return Regex.Replace(input, @"\s{2,}", " ").Trim();
+
         } // end of method
 
         public static string CreateRandomString(int length, bool onlyNumbers = false)
@@ -180,36 +227,17 @@ namespace Magic
         {
 
             HasChanged hasChanged = new HasChanged();
-            DateTime pastDateTime;
 
-            // Coba parsing sebagai Unix timestamp
-            if (long.TryParse(pastDateTimeString, out long unixTimestamp))
-            {
-                // Jika berhasil parsing sebagai Unix timestamp
-                pastDateTime = DateTimeOffset.FromUnixTimeSeconds(unixTimestamp).LocalDateTime;
-            }
-            else
-            {
-                // Jika tidak, parsing sebagai string tanggal waktu
-                pastDateTime = DateTime.ParseExact(pastDateTimeString, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-            }
+            DateTime pastDateTime = DateTime.ParseExact(pastDateTimeString, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
 
             // Dapatkan DateTime lokal saat ini
             DateTime currentLocalDateTime = DateTime.Now;
-
             hasChanged.CurrentDateTime = currentLocalDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
 
             // Bandingkan Year, Month, dan Day
-            if (pastDateTime.Year != currentLocalDateTime.Year || 
-                    pastDateTime.Month != currentLocalDateTime.Month || 
-                    pastDateTime.Day != currentLocalDateTime.Day)
-            {
-                hasChanged.Changed = true;
-            }
-            else
-            {
-                hasChanged.Changed = false;
-            }
+            hasChanged.Changed = pastDateTime.Year != currentLocalDateTime.Year ||
+                pastDateTime.Month != currentLocalDateTime.Month ||
+                pastDateTime.Day != currentLocalDateTime.Day;
 
             return hasChanged;
 
@@ -219,19 +247,8 @@ namespace Magic
         {
 
             HasChanged hasChanged = new HasChanged();
-            DateTime pastDateTime;
 
-            // Coba parsing sebagai Unix timestamp
-            if (long.TryParse(pastDateTimeString, out long unixTimestamp))
-            {
-                // Jika berhasil parsing sebagai Unix timestamp
-                pastDateTime = DateTimeOffset.FromUnixTimeSeconds(unixTimestamp).LocalDateTime;
-            }
-            else
-            {
-                // Jika tidak, parsing sebagai string tanggal waktu
-                pastDateTime = DateTime.ParseExact(pastDateTimeString, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-            }
+            DateTime pastDateTime = DateTime.ParseExact(pastDateTimeString, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
 
             // Dapatkan DateTime lokal saat ini
             DateTime currentLocalDateTime = DateTime.Now;
@@ -239,17 +256,10 @@ namespace Magic
             hasChanged.CurrentDateTime = currentLocalDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
 
             // Bandingkan Year, Month, Day, dan Hour
-            if (pastDateTime.Year != currentLocalDateTime.Year ||
-                    pastDateTime.Month != currentLocalDateTime.Month ||
-                    pastDateTime.Day != currentLocalDateTime.Day ||
-                    pastDateTime.Hour != currentLocalDateTime.Hour)
-            {
-                hasChanged.Changed = true;
-            }
-            else
-            {
-                hasChanged.Changed = false;
-            }
+            hasChanged.Changed = pastDateTime.Year != currentLocalDateTime.Year ||
+                pastDateTime.Month != currentLocalDateTime.Month ||
+                pastDateTime.Day != currentLocalDateTime.Day ||
+                pastDateTime.Hour != currentLocalDateTime.Hour;
 
             return hasChanged;
 
@@ -345,21 +355,18 @@ namespace Magic
 
         public static string GetBinFolder()
         {
-            string? codeBase = System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase;
-            string? directoryName = System.IO.Path.GetDirectoryName(codeBase);
+            string? location = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            string? directoryName = System.IO.Path.GetDirectoryName(location);
 
             if (directoryName != null)
             {
-                return directoryName.Length > 6 ? directoryName.Substring(6) : string.Empty;
+                return directoryName;
             }
             else
             {
-                // Handle the case where directoryName is null
-                // You might want to return a default value or throw an exception
-                return string.Empty; // Or any other appropriate default value
+                return string.Empty;
             }
-        }
-
+        } // end of method
 
         public static bool IsNewDay(long lastReset = 0)
         {
@@ -411,9 +418,15 @@ namespace Magic
 
         } // end of class
 
-        public class DataBridge
+        public class IdAndNamePair
         {
             public int Id { get; set; }
+            public string? Name { get; set; }
+        } // end of method
+
+        public class UidAndNamePair
+        {
+            public int Uid { get; set; }
             public string? Name { get; set; }
         } // end of method
 
@@ -469,6 +482,79 @@ namespace Magic
                 list[i] = list[j];
                 list[j] = temp;
             }
+
+        } // end of method
+
+        public static string HariIni(string dayShort)
+        {
+            return dayShort switch
+            {
+                "Sun" => "Minggu",
+                "Mon" => "Senin",
+                "Tue" => "Selasa",
+                "Wed" => "Rabu",
+                "Thu" => "Kamis",
+                "Fri" => "Jumat",
+                "Sat" => "Sabtu",
+                _ => dayShort
+            };
+        } // end of method
+
+        public static string BulanIni(string monthNum)
+        {
+            return monthNum switch
+            {
+                "01" => "Januari",
+                "02" => "Februari",
+                "03" => "Maret",
+                "04" => "April",
+                "05" => "Mei",
+                "06" => "Juni",
+                "07" => "Juli",
+                "08" => "Agustus",
+                "09" => "September",
+                "10" => "Oktober",
+                "11" => "November",
+                "12" => "Desember",
+                _ => monthNum
+            };
+        } // end of method
+
+        public static string Rupiah(decimal value)
+        {
+
+            return string.Format(new System.Globalization.CultureInfo("id-ID"), "Rp {0:N0}", value);
+
+        } // end of method
+
+        public static string ConvertMessageShortcodes(string message, Dictionary<string, object?> shortcodes)
+        {
+
+            DateTime plusEnamJam = DateTime.UtcNow.AddHours(13); // UTC + 7 + 6
+
+            shortcodes["time_max"] = plusEnamJam.ToString("H:mm"); // sama seperti G:i di PHP
+            shortcodes["date_max"] = plusEnamJam.ToString("dd");
+            shortcodes["year_max"] = plusEnamJam.ToString("yyyy");
+            shortcodes["day_max"] = HariIni(plusEnamJam.ToString("ddd")); // misalnya "Sun"
+            shortcodes["month_max"] = BulanIni(plusEnamJam.ToString("MM"));
+
+            foreach (var kvp in shortcodes)
+            {
+                string key = kvp.Key;
+                object? value = kvp.Value ?? "";
+
+                if (key == "price" || key == "value")
+                {
+                    if (decimal.TryParse(value.ToString(), out decimal price))
+                    {
+                        value = Rupiah(price);
+                    }
+                }
+
+                message = message.Replace($"[{key}]", value.ToString());
+            }
+
+            return message;
 
         } // end of method
 
