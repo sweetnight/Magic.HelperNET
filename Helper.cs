@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Magic
 {
@@ -39,11 +40,11 @@ namespace Magic
             }
         } // end of method
 
-        public static void ShowErrorMessages(List<string> errorMessages, Control control)
+        public static void ShowErrorMessages(List<string> errorMessages, Control control, string caption = "Input tidak valid. Silakan cek kembali hal di bawah ini: ", string title = "Informasi")
         {
             StringBuilder errorMessage = new StringBuilder();
 
-            errorMessage.Append("Input tidak valid. Silakan cek kembali hal di bawah ini : ");
+            errorMessage.Append(caption);
             errorMessage.Append(Environment.NewLine);
 
             foreach (string single in errorMessages)
@@ -54,7 +55,7 @@ namespace Magic
 
             RunCrossThreadMethod(control, () =>
             {
-                MessageBox.Show(control, errorMessage.ToString(), "Informasi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(control, errorMessage.ToString(), title, MessageBoxButtons.OK, MessageBoxIcon.Error);
             });
 
             return;
@@ -161,8 +162,11 @@ namespace Magic
                 m = Regex.Match(input, pattern);
             }
 
-            // Hilangkan spasi berlebih, trim di awal/akhir
-            return Regex.Replace(input, @"\s{2,}", " ").Trim();
+            // Hapus spasi/tab berlebih di tiap baris tapi pertahankan newline
+            var lines = input.Split('\n')
+                .Select(line => Regex.Replace(line, @"[ \t]{2,}", " ").TrimEnd());
+
+            return string.Join("\n", lines).Trim();
 
         } // end of method
 
@@ -559,4 +563,88 @@ namespace Magic
         } // end of method
 
     } // end of class Helper
+
+    public class DebounceProcess<T>
+    {
+        public event Action<DebounceEventArgs>? DebounceEvents;
+
+        public enum EventType
+        {
+            StartTimer,
+            AtInterval
+        }
+
+        public class DebounceEventArgs
+        {
+            public EventType EventType { get; set; }
+
+            public DebounceEventArgs(EventType eventType)
+            {
+
+                EventType = eventType;
+
+            } // end of method
+
+        } // end of method
+
+        public int Interval { get; set; }
+        public bool Immediate { get; set; }
+
+        private System.Windows.Forms.Timer _timer;
+        private T? _lastInput;
+        private readonly Func<T?, Task> _callback;
+
+        public DebounceProcess(Func<T?, Task> callback, int interval = 1000)
+        {
+            _callback = callback;
+            Interval = interval;
+
+            _timer = new System.Windows.Forms.Timer();
+            _timer.Interval = Interval;
+            _timer.Tick += OnTick;
+        } // end of method
+
+        public DebounceProcess(Action<T?> callback, int interval = 1000)
+            : this(input =>
+            {
+                callback(input);
+                return Task.CompletedTask;
+            }, interval)
+        { 
+        } // end of method
+
+        public void PushInput(T input)
+        {
+            _lastInput = input;
+
+            if (Immediate)
+            {
+                _ = _callback(input);
+            }
+            else
+            {
+                _timer.Stop();
+                _timer.Start();
+
+                DebounceEvents?.Invoke(new DebounceEventArgs(EventType.StartTimer));
+            }
+        } // end of method
+
+        private async void OnTick(object? sender, EventArgs e)
+        {
+            DebounceEvents?.Invoke(new DebounceEventArgs(EventType.AtInterval));
+
+            _timer.Stop();
+            if (_lastInput != null)
+                await _callback(_lastInput);
+        } // end of method
+
+        public void ForceExecute(T? input)
+        {
+            _timer.Stop();
+            _ = _callback(input);
+        } // end of method
+
+    } // end of class
+
 } // end of namespace
